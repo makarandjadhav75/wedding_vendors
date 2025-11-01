@@ -17,7 +17,7 @@ class InspirationSection extends StatelessWidget {
         const Text('Inspiration & Blogs', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         SizedBox(
-          height: 120,
+          height: 140,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: sample.length,
@@ -25,16 +25,47 @@ class InspirationSection extends StatelessWidget {
             itemBuilder: (context, i) {
               final s = sample[i];
               return Container(
-                width: 240,
+                width: 260,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   image: DecorationImage(image: NetworkImage(s['image']!), fit: BoxFit.cover),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(.08), blurRadius: 10, offset: const Offset(0, 6))],
                 ),
-                child: Container(
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), gradient: LinearGradient(colors: [Colors.black26, Colors.transparent], begin: Alignment.bottomCenter, end: Alignment.topCenter)),
-                  padding: const EdgeInsets.all(12),
-                  alignment: Alignment.bottomLeft,
-                  child: Text(s['title']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(
+                            colors: [Colors.black54, Colors.transparent],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 10,
+                      top: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: Colors.pinkAccent.withOpacity(.9), borderRadius: BorderRadius.circular(10)),
+                        child: const Text('Featured', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 10,
+                      child: Text(
+                        s['title']!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ],
                 ),
               );
             },

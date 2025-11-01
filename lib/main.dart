@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
 
   // Configure your API base URL here:
   static final ApiService apiService =
-  ApiService(baseUrl: 'http://192.168.1.101:3030');
+  ApiService(baseUrl: 'http://192.168.0.108:3030');
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'wedding_planer',
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(apiService: apiService),
+      home: LoginPage(apiService: apiService),
 
     );
   }

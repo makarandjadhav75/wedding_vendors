@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../APiServices/api_services.dart';
 import '../APiServices/common_repo.dart';
+import 'vendor_onboarding_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   /// Required ApiService to perform registration.
@@ -126,9 +127,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
           } catch (_) {}
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resp.message.isNotEmpty ? resp.message : 'Registered successfully')));
+        // If user is Vendor, take them to onboarding to fill business details.
+        if (payload['role'] == 'VENDOR') {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Continue with vendor onboarding')));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => VendorOnboardingScreen(
+                vendor: null,
+                apiService: widget.apiService,
+              ),
+            ),
+          );
+          return;
+        }
 
-        // return values so caller can autofill login
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resp.message.isNotEmpty ? resp.message : 'Registered successfully')));
         Navigator.of(context).pop({
           'email': payload['email']!,
           'fullname': payload['fullName']!,

@@ -11,7 +11,7 @@ import '../Models/page_data_Model.dart';
 import '../Models/vendor_model.dart';
 import 'common_repo.dart';
 
-const String defaultBaseUrl = "http://192.168.1.101:3030";
+const String defaultBaseUrl = "http://192.168.0.108:3030";
 
 class ApiService {
   final http.Client _client;
@@ -40,24 +40,32 @@ class ApiService {
       );
 
       print('✅ [API RESPONSE] Status Code: ${response.statusCode}');
-      final rawBody = response.bodyBytes.isEmpty ? '' : utf8.decode(response.bodyBytes);
+      final rawBody = response.bodyBytes.isEmpty ? '' : utf8.decode(
+          response.bodyBytes);
       print('✅ Raw Body: ${rawBody.isEmpty ? "<empty>" : rawBody}');
 
-      if (rawBody.trim().isEmpty) {
+      if (rawBody
+          .trim()
+          .isEmpty) {
         final msg = response.reasonPhrase ?? 'Empty response from server';
-        return CommonResponse<LoginModel>(message: msg, success: false, data: null);
+        return CommonResponse<LoginModel>(
+            message: msg, success: false, data: null);
       }
 
       dynamic parsed;
       try {
         parsed = jsonDecode(rawBody);
       } catch (e) {
-        print('❌ JSON decode error: $e');
-        return CommonResponse<LoginModel>(message: 'Invalid JSON response', success: false, data: null);
+        print(' JSON decode error: $e');
+        return CommonResponse<LoginModel>(
+            message: 'Invalid JSON response', success: false, data: null);
       }
 
       if (parsed is! Map<String, dynamic>) {
-        return CommonResponse<LoginModel>(message: 'Unexpected response structure', success: false, data: null);
+        return CommonResponse<LoginModel>(
+            message: 'Unexpected response structure',
+            success: false,
+            data: null);
       }
 
       final commonResp = CommonResponse<LoginModel>.fromJson(
@@ -67,8 +75,9 @@ class ApiService {
 
       return commonResp;
     } catch (e, st) {
-      print('❌ [API ERROR] Exception during login: $e\n$st');
-      return CommonResponse<LoginModel>(message: 'Login failed: $e', success: false, data: null);
+      print(' [API ERROR] Exception during login: $e\n$st');
+      return CommonResponse<LoginModel>(
+          message: 'Login failed: $e', success: false, data: null);
     }
   }
 
@@ -79,36 +88,50 @@ class ApiService {
     required String role,
   }) async {
     final uri = Uri.parse('$baseUrl/api/auth/register');
-    print('🔹 [API CALL] POST: $uri');
+    print(' [API CALL] POST: $uri');
 
     try {
-      final payload = {'email': email, 'fullName': fullName, 'password': password, 'role': role.toUpperCase()};
+      final payload = {
+        'email': email,
+        'fullName': fullName,
+        'password': password,
+        'role': role.toUpperCase()
+      };
       final response = await _client.post(
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
       );
 
-      if (response.body.trim().isEmpty) {
-        return CommonResponse<dynamic>(message: response.reasonPhrase ?? 'Empty response', success: false, data: null);
+      if (response.body
+          .trim()
+          .isEmpty) {
+        return CommonResponse<dynamic>(
+            message: response.reasonPhrase ?? 'Empty response',
+            success: false,
+            data: null);
       }
 
       dynamic parsed;
       try {
         parsed = jsonDecode(response.body);
       } catch (e) {
-        return CommonResponse<dynamic>(message: 'Invalid JSON response', success: false, data: null);
+        return CommonResponse<dynamic>(
+            message: 'Invalid JSON response', success: false, data: null);
       }
 
       if (parsed is! Map<String, dynamic>) {
-        return CommonResponse<dynamic>(message: 'Unexpected response structure', success: false, data: null);
+        return CommonResponse<dynamic>(message: 'Unexpected response structure',
+            success: false,
+            data: null);
       }
 
       final commonResp = CommonResponse<dynamic>.fromJson(parsed, (d) => d);
       return commonResp;
     } catch (e, st) {
-      print('❌ [API ERROR] Exception during register: $e\n$st');
-      return CommonResponse<dynamic>(message: 'Register failed: $e', success: false, data: null);
+      print(' [API ERROR] Exception during register: $e\n$st');
+      return CommonResponse<dynamic>(
+          message: 'Register failed: $e', success: false, data: null);
     }
   }
 
@@ -124,26 +147,36 @@ class ApiService {
     print('GET $uri');
 
     try {
-      final response = await _client.get(uri, headers: {'Accept': 'application/json'});
+      final response = await _client.get(
+          uri, headers: {'Accept': 'application/json'});
       final raw = response.body;
-      if (raw.trim().isEmpty) {
-        return CommonResponse<PagedData<Category>>(message: response.reasonPhrase ?? 'Empty response', success: false, data: null);
+      if (raw
+          .trim()
+          .isEmpty) {
+        return CommonResponse<PagedData<Category>>(
+            message: response.reasonPhrase ?? 'Empty response',
+            success: false,
+            data: null);
       }
 
       final parsed = jsonDecode(raw);
       if (parsed is! Map<String, dynamic>) {
-        return CommonResponse<PagedData<Category>>(message: 'Unexpected structure', success: false, data: null);
+        return CommonResponse<PagedData<Category>>(
+            message: 'Unexpected structure', success: false, data: null);
       }
 
       final commonResp = CommonResponse<PagedData<Category>>.fromJson(
         parsed,
-            (data) => PagedData<Category>.fromJson(data as Map<String, dynamic>, (item) => Category.fromJson(item as Map<String, dynamic>)),
+            (data) =>
+        PagedData<Category>.fromJson(data as Map<String, dynamic>, (item) =>
+            Category.fromJson(item as Map<String, dynamic>)),
       );
 
       return commonResp;
     } catch (e, st) {
       print('getCategories error: $e\n$st');
-      return CommonResponse<PagedData<Category>>(message: 'Network error: $e', success: false, data: null);
+      return CommonResponse<PagedData<Category>>(
+          message: 'Network error: $e', success: false, data: null);
     }
   }
 
@@ -154,8 +187,11 @@ class ApiService {
 
     try {
       final token = await storage.read(key: 'auth_token');
-      if (token == null || token.trim().isEmpty) {
-        return CommonResponse<dynamic>(message: 'No auth token found', success: false, data: null);
+      if (token == null || token
+          .trim()
+          .isEmpty) {
+        return CommonResponse<dynamic>(
+            message: 'No auth token found', success: false, data: null);
       }
 
       final response = await _client.get(uri, headers: {
@@ -164,19 +200,27 @@ class ApiService {
         'Authorization': 'Bearer $token',
       });
 
-      if (response.body.trim().isEmpty) {
-        return CommonResponse<dynamic>(message: response.reasonPhrase ?? 'Empty response', success: false, data: null);
+      if (response.body
+          .trim()
+          .isEmpty) {
+        return CommonResponse<dynamic>(
+            message: response.reasonPhrase ?? 'Empty response',
+            success: false,
+            data: null);
       }
 
       final parsed = jsonDecode(response.body);
       if (parsed is! Map<String, dynamic>) {
-        return CommonResponse<dynamic>(message: 'Unexpected response structure', success: false, data: null);
+        return CommonResponse<dynamic>(message: 'Unexpected response structure',
+            success: false,
+            data: null);
       }
 
       return CommonResponse<dynamic>.fromJson(parsed, (d) => d);
     } catch (e, st) {
       print('getProfile error: $e\n$st');
-      return CommonResponse<dynamic>(message: 'Failed to fetch profile: $e', success: false, data: null);
+      return CommonResponse<dynamic>(
+          message: 'Failed to fetch profile: $e', success: false, data: null);
     }
   }
 
@@ -189,31 +233,146 @@ class ApiService {
     final params = {
       'page': page.toString(),
       'size': size.toString(),
-      if (categoryId != null && categoryId > 0) 'categoryId': categoryId.toString(),
+      if (categoryId != null && categoryId > 0) 'categoryId': categoryId
+          .toString(),
     };
 
-    final uri = Uri.parse('$baseUrl/api/vendors?page=0&size=20&categoryId=1').replace(queryParameters: params);
+    final uri = Uri
+        .parse('$baseUrl/api/vendors?page=0&size=20&categoryId=1')
+        .replace(queryParameters: params);
     print('GET $uri');
 
     try {
-      final resp = await _client.get(uri, headers: {'Accept': 'application/json'});
+      final resp = await _client.get(
+          uri, headers: {'Accept': 'application/json'});
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
-        return CommonResponse<PagedData<Vendor>>(success: false, message: 'Server returned ${resp.statusCode}', data: null);
+        return CommonResponse<PagedData<Vendor>>(success: false,
+            message: 'Server returned ${resp.statusCode}',
+            data: null);
       }
 
       final decoded = jsonDecode(resp.body);
       if (decoded is! Map<String, dynamic>) {
-        return CommonResponse<PagedData<Vendor>>(success: false, message: 'Invalid JSON', data: null);
+        return CommonResponse<PagedData<Vendor>>(
+            success: false, message: 'Invalid JSON', data: null);
       }
 
-      final data = PagedData<Vendor>.fromJson(decoded, (e) => Vendor.fromJson(e as Map<String, dynamic>));
+      final data = PagedData<Vendor>.fromJson(
+          decoded, (e) => Vendor.fromJson(e as Map<String, dynamic>));
 
-      return CommonResponse<PagedData<Vendor>>(success: true, message: 'OK', data: data);
+      return CommonResponse<PagedData<Vendor>>(
+          success: true, message: 'OK', data: data);
     } catch (e, st) {
       print('getVendors error: $e\n$st');
-      return CommonResponse<PagedData<Vendor>>(success: false, message: 'Network error: $e', data: null);
+      return CommonResponse<PagedData<Vendor>>(
+          success: false, message: 'Network error: $e', data: null);
     }
   }
+
+  Future<CommonResponse<Vendor>> updateVendor({
+    required int vendorId,
+    required String businessName,
+    required int cityId,
+    required int primaryCategoryId,
+    required String legalName,
+    required String gstNumber,
+    required String description,
+    required double ratingAvg,
+    required bool verified,
+  }) async {
+    final token = await const FlutterSecureStorage().read(key: 'auth_token');
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/vendors/$vendorId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'businessName': businessName,
+        'legalName': legalName,
+        'gstNumber': gstNumber,
+        'description': description,
+        'primaryCategoryId': primaryCategoryId,
+        'cityId': cityId,
+        'ratingAvg': ratingAvg,
+        'verified': verified,
+      }),
+    );
+
+    final raw = response.body;
+    if (raw.trim().isEmpty) {
+      return CommonResponse<Vendor>(success: false, message: response.reasonPhrase ?? 'Empty response', data: null);
+    }
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(raw);
+    } catch (_) {
+      return CommonResponse<Vendor>(success: false, message: 'Invalid JSON', data: null);
+    }
+
+    if (decoded is! Map<String, dynamic>) {
+      return CommonResponse<Vendor>(success: false, message: 'Unexpected response structure', data: null);
+    }
+
+    return CommonResponse<Vendor>.fromJson(
+      decoded,
+      (d) => Vendor.fromJson(d as Map<String, dynamic>),
+    );
+  }
+
+  Future<CommonResponse<Vendor>> createVendor({
+    required String businessName,
+    required int cityId,
+    required int primaryCategoryId,
+    required String legalName,
+    required String gstNumber,
+    required String description,
+    required double ratingAvg,
+    required bool verified,
+  }) async {
+    final token = await const FlutterSecureStorage().read(key: 'auth_token');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/vendors'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'businessName': businessName,
+        'legalName': legalName,
+        'gstNumber': gstNumber,
+        'description': description,
+        'primaryCategoryId': primaryCategoryId,
+        'cityId': cityId,
+        'ratingAvg': ratingAvg,
+        'verified': verified,
+      }),
+    );
+
+    final raw = response.body;
+    if (raw.trim().isEmpty) {
+      return CommonResponse<Vendor>(success: false, message: response.reasonPhrase ?? 'Empty response', data: null);
+    }
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(raw);
+    } catch (_) {
+      return CommonResponse<Vendor>(success: false, message: 'Invalid JSON', data: null);
+    }
+
+    if (decoded is! Map<String, dynamic>) {
+      return CommonResponse<Vendor>(success: false, message: 'Unexpected response structure', data: null);
+    }
+
+    return CommonResponse<Vendor>.fromJson(
+      decoded,
+      (d) => Vendor.fromJson(d as Map<String, dynamic>),
+    );
+  }
 }
-
-

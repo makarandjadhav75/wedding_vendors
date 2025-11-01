@@ -313,7 +313,7 @@ class _CategoryListingScreenState extends State<CategoryListingScreen> {
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) {
+                        (context, index) {
                       final v = filtered[index];
                       return _VendorCard(vendor: v, onTap: () {
                         Navigator.of(context).push(
@@ -334,7 +334,7 @@ class _CategoryListingScreenState extends State<CategoryListingScreen> {
             else
               SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) {
+                      (context, index) {
                     final v = filtered[index];
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -418,10 +418,10 @@ class _VendorCard extends StatelessWidget {
                 aspectRatio: 16/10,
                 child: vendor.imageUrl != null && vendor.imageUrl!.isNotEmpty
                     ? Image.network(
-                        vendor.imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200, child: const Icon(Icons.image)),
-                      )
+                  vendor.imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200, child: const Icon(Icons.image)),
+                )
                     : Container(color: Colors.grey.shade200, child: const Icon(Icons.store)),
               ),
             ),
@@ -488,12 +488,12 @@ class _VendorTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           child: vendor.imageUrl != null && vendor.imageUrl!.isNotEmpty
               ? Image.network(
-                  vendor.imageUrl!,
-                  width: 64,
-                  height: 64,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.image),
-                )
+            vendor.imageUrl!,
+            width: 64,
+            height: 64,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const Icon(Icons.image),
+          )
               : Container(width: 64, height: 64, color: Colors.grey.shade200, child: const Icon(Icons.store)),
         ),
         title: Text(vendor.ownerFullName, style: const TextStyle(fontWeight: FontWeight.bold)),

@@ -145,7 +145,14 @@ class _ContactQuickFormState extends State<ContactQuickForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFFFF6F7),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF1F4), Color(0xFFFFF7F9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.pinkAccent.withOpacity(.08)),
+      ),
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
