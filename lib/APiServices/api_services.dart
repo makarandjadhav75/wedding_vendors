@@ -11,7 +11,7 @@ import '../Models/page_data_Model.dart';
 import '../Models/vendor_model.dart';
 import 'common_repo.dart';
 
-const String defaultBaseUrl = "http://192.168.0.108:3030";
+const String defaultBaseUrl = "http://192.168.1.101:3030";
 
 class ApiService {
   final http.Client _client;

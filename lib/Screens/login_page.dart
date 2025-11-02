@@ -437,7 +437,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                             final result = await Navigator.of(context).push<Map<String, String>>(
                                               MaterialPageRoute(
                                                 builder: (_) => RegistrationScreen(
-                                                  apiService: widget.apiService, // <-- pass widget.apiService
+                                                  apiService: widget.apiService,
+                                                  forcedRole: 'User',
                                                 ),
                                               ),
                                             );

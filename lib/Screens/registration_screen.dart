@@ -1,8 +1,10 @@
 // lib/screens/create_account_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../APiServices/api_services.dart';
 import '../APiServices/common_repo.dart';
 import 'vendor_onboarding_screen.dart';
+import 'vendor_login_page.dart';
 
 class RegistrationScreen extends StatefulWidget {
   /// Required ApiService to perform registration.
@@ -10,8 +12,10 @@ class RegistrationScreen extends StatefulWidget {
 
   /// Optional callback to receive submitted values (still pops values as well).
   final void Function(Map<String, String> values)? onSubmit;
+  /// Optional: when provided, the role dropdown is hidden and this role is used.
+  final String? forcedRole;
 
-  const RegistrationScreen({Key? key, required this.apiService, this.onSubmit}) : super(key: key);
+  const RegistrationScreen({Key? key, required this.apiService, this.onSubmit, this.forcedRole}) : super(key: key);
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -42,6 +46,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
     _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
+
+    // Preselect role if forcedRole is provided
+    if (widget.forcedRole != null) {
+      final fr = widget.forcedRole!.toLowerCase();
+      if (fr == 'vendor') {
+        _selectedRole = 'Vendor';
+      } else if (fr == 'admin') {
+        _selectedRole = 'Admin';
+      } else {
+        // fallback: use display case of provided role
+        _selectedRole = widget.forcedRole;
+      }
+    }
   }
 
   @override
@@ -100,7 +117,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
       'email': _emailCtrl.text.trim(),
       'fullName': _fullnameCtrl.text.trim(),
       'password': _passwordCtrl.text,
-      'role': _selectedRole!.toUpperCase(),
+      'role': (widget.forcedRole ?? _selectedRole!) .toUpperCase(),
     };
 
     try {
@@ -127,18 +144,40 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
           } catch (_) {}
         }
 
-        // If user is Vendor, take them to onboarding to fill business details.
+        // If user is Vendor, sign in automatically then take them to onboarding.
         if (payload['role'] == 'VENDOR') {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Continue with vendor onboarding')));
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => VendorOnboardingScreen(
-                vendor: null,
-                apiService: widget.apiService,
-              ),
-            ),
-          );
+          try {
+            final loginResp = await widget.apiService.login(
+              email: payload['email']!,
+              password: payload['password']!,
+            );
+            if (loginResp.success && loginResp.data != null) {
+              // store token so onboarding can call authenticated APIs
+              await const FlutterSecureStorage().write(key: 'auth_token', value: loginResp.data!.token);
+              await const FlutterSecureStorage().write(key: 'expires_at', value: loginResp.data!.expiresAt.toString());
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Continue with vendor onboarding')));
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => VendorOnboardingScreen(
+                    vendor: null,
+                    apiService: widget.apiService,
+                  ),
+                ),
+              );
+            } else {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loginResp.message.isNotEmpty ? loginResp.message : 'Please sign in to continue onboarding')));
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => VendorLoginPage(apiService: widget.apiService)),
+              );
+            }
+          } catch (_) {
+            if (!mounted) return;
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => VendorLoginPage(apiService: widget.apiService)),
+            );
+          }
           return;
         }
 
@@ -208,6 +247,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
                     child: Center(
                       child: Column(
@@ -227,7 +273,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                   // Card with form
                   Card(
                     elevation: 6,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(color: Colors.pinkAccent.withOpacity(0.08)),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                       child: Form(
@@ -285,36 +334,63 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                             ),
                             const SizedBox(height: 12),
 
-                            // Role dropdown
-                            DropdownButtonFormField<String>(
-                              value: _selectedRole,
-                              items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
-                              decoration: InputDecoration(
-                                labelText: 'Role',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                filled: true,
-                                fillColor: Colors.white,
-                                prefixIcon: const Icon(Icons.badge_outlined),
+                            // Role selection (hidden when forcedRole provided)
+                            if (widget.forcedRole == null)
+                              DropdownButtonFormField<String>(
+                                value: _selectedRole,
+                                items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                                decoration: InputDecoration(
+                                  labelText: 'Role',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  prefixIcon: const Icon(Icons.badge_outlined),
+                                ),
+                                onChanged: (v) => setState(() => _selectedRole = v),
+                                validator: _roleValidator,
+                              )
+                            else
+                              TextFormField(
+                                enabled: false,
+                                initialValue: _selectedRole,
+                                decoration: InputDecoration(
+                                  labelText: 'Role',
+                                  prefixIcon: const Icon(Icons.badge_outlined),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
                               ),
-                              onChanged: (v) => setState(() => _selectedRole = v),
-                              validator: _roleValidator,
-                            ),
 
                             const SizedBox(height: 18),
 
                             // Submit
                             SizedBox(
                               width: double.infinity,
-                              height: 48,
+                              height: 50,
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleSubmit,
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  elevation: 4,
+                                style: ButtonStyle(
+                                  shape: MaterialStateProperty.all(
+                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  elevation: MaterialStateProperty.all(6),
+                                  backgroundColor: MaterialStateProperty.resolveWith((_) => Colors.pink),
                                 ),
-                                child: _isLoading
-                                    ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                    : const Text('Create account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                child: Ink(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFD6336C), Color(0xFFFF9AB3)],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Container(
+                                    alignment: Alignment.center,
+                                    child: _isLoading
+                                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                        : const Text('Create account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 12),

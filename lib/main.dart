@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:wedding_market/Screens/Home%20Screen/home_screen.dart';
 import 'APiServices/api_services.dart';
-import 'Screens/login_page.dart';
+import 'Screens/splash_screen.dart';
 
 
 void main() {
@@ -13,7 +12,7 @@ class MyApp extends StatelessWidget {
 
   // Configure your API base URL here:
   static final ApiService apiService =
-  ApiService(baseUrl: 'http://192.168.0.108:3030');
+  ApiService(baseUrl: 'http://192.168.1.101:3030');
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'wedding_planer',
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      home: LoginPage(apiService: apiService),
+      home: SplashScreen(apiService: apiService),
 
     );
   }
